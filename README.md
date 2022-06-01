@@ -13,7 +13,7 @@ please see the [dedicated folder](comp_genomics/README.md).
 ## Environment
 
 The conda environment used for this project
-is described in `[conda-env.txt](conda-env.txt)`.
+is described in [`conda-env.txt`](conda-env.txt).
 
 This project was run on the Rockefeller University
 High Performance Computing cluster,
