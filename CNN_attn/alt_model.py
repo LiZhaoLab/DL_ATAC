@@ -23,24 +23,6 @@ from pathlib import Path
 
 LR = 5e-4
 
-def _load_model(suffix):
-    # this is for the old 2t model w/o MHA;
-    # kept for trivial revert
-    params = np.load('../saved_models/params_2tis_2057.npy', allow_pickle='TRUE').item()
-    model = NeuralNetwork(params["n"],
-                          [params["h0"], params["h1"], params["h2"], params["h3"], params["h4"]],
-                          [params["f0"], params["f1"], params["f2"], params["f3"], params["f4"]],
-                          [params["ps0"], params["ps1"], params["ps2"], params["ps3"], params["ps4"]],
-                          params["fcs"],
-                          params["p"])
-    device = get_default_device()
-    to_device(model, device)
- #model.load_state_dict(torch.load("../saved_models/model_" + suffix))
-    #model.load_state_dict(torch.load("../saved_models/model_" + suffix))
-    model.load_state_dict(torch.load("../saved_models/model_" + suffix, map_location=torch.device('cpu')))
-    model.eval()
-    return model
-
 def load_model(suffix,
               param_folder = Path('/lustre/fs4/zhao_lab/scratch/lzhao/Khodursky/atac_DL_2t_attention/saved_models'),
               param_suffix = '2tis_2057',
@@ -62,27 +44,6 @@ def load_model(suffix,
     model.eval()
     return model
 
-def _retrain_model(X_data, y_data, oldsuffix, batch_size, seed=10, stratify=None):
-    # this is for the old 2t model w/o MHA;
-    # kept for trivial revert
-    newsuffix = '_'+oldsuffix+'_retrained'
-    params = np.load('../saved_models/params_2tis_2057.npy', allow_pickle='TRUE').item()
-    model = load_model(oldsuffix)
-    device = get_default_device()
-    to_device(model, device)
-
-    if not isinstance(X_data, torch.Tensor):
-        X_data = torch.cat([torch.tensor(X_data, dtype=torch.float32)])
-    if not isinstance(y_data, torch.Tensor):
-        y_data = torch.cat([torch.tensor(y_data, dtype=torch.float32)])
-
-    X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.1, random_state=seed, stratify=stratify)
-    train_loader = get_loader(X_train, y_train, device, batch_size, shuffle=True)
-    val_loader = get_loader(X_val, y_val, device, batch_size)
-    model.train()
-    fit(1000, params["lr"]/10, params["wd"], params["mo"], model, train_loader, val_loader, newsuffix)
-    return load_model(newsuffix[1:]) # strip the leading '_'
-
 def retrain_model(X_data, y_data, oldsuffix, batch_size, seed=10, stratify=None,
                  param_folder = Path('/lustre/fs4/zhao_lab/scratch/lzhao/Khodursky/atac_DL_2t_attention/saved_models'),
                  param_suffix = '2tis_2057'):
@@ -103,31 +64,6 @@ def retrain_model(X_data, y_data, oldsuffix, batch_size, seed=10, stratify=None,
     model.train()
     fit(1000, LR/10, params["wd"], params["mo"], model, train_loader, val_loader, newsuffix)
     return load_model(newsuffix[1:], model_folder = Path('../saved_models')) # strip the leading '_'
-
-def _train_model(X_data, y_data, suffix, batch_size=32, seed=10, stratify=None):
-    # this is for the old 2t model w/o MHA;
-    # kept for trivial revert
-    params = np.load('../saved_models/params_2tis_2057.npy', allow_pickle='TRUE').item()
-    model = NeuralNetwork(params["n"],
-                          [params["h0"], params["h1"], params["h2"], params["h3"], params["h4"]],
-                          [params["f0"], params["f1"], params["f2"], params["f3"], params["f4"]],
-                          [params["ps0"], params["ps1"], params["ps2"], params["ps3"], params["ps4"]],
-                          params["fcs"],
-                          params["p"])
-    device = get_default_device()
-    to_device(model, device)
-
-    if not isinstance(X_data, torch.Tensor):
-        X_data = torch.cat([torch.tensor(X_data, dtype=torch.float32)])
-    if not isinstance(y_data, torch.Tensor):
-        y_data = torch.cat([torch.tensor(y_data, dtype=torch.float32)])
-
-    X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.1, random_state=seed, stratify=stratify)
-    train_loader = get_loader(X_train, y_train, device, batch_size, shuffle=True)
-    val_loader = get_loader(X_val, y_val, device, batch_size)
-    model.train()
-    fit(1000, params["lr"], params["wd"], params["mo"], model, train_loader, val_loader, suffix)
-    return load_model(suffix[1:]) # strip the leading '_'
 
 def train_model(X_data, y_data, suffix, batch_size=32, seed=10, stratify=None,
               param_folder = Path('/lustre/fs4/zhao_lab/scratch/lzhao/Khodursky/atac_DL_2t_attention/saved_models'),
@@ -211,9 +147,6 @@ def get_test_results(X_test,y_test, model):
     device = get_default_device()
     test_loader = get_loader(X_test, y_test, device)
     return get_aucs_bt(model, test_loader)
-    
-
-# ======== EBZ funcs below
 
 def parse_bulk_results(result, labels=False):
     '''given a raw pytorch result, returns the model outputs, nicely-formatted.
