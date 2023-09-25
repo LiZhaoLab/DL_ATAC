@@ -4,6 +4,14 @@
 
 Describes model architecture.
 
+### [fit_network.py](fit_network.py)
+
+Fits the network.
+
+### [tune_hyperparameters.py](tune_hyperparameters.py)
+
+Tunes hyperparameters.
+
 ### [utils.py](utils.py)
 
 Provides utility functions, plus model training/loading/etc.
@@ -20,3 +28,18 @@ Describes loaders for data.
 
 Calculates AUC.
 
+### [SSWM.py](SSWM.py)
+
+Conducts mutagenesis under strong-selection weak-mutation conditions (SSWM).
+
+### [deep_insilico.py](deep_insilico.py)
+
+Conducts deep insilico mutagenesis.
+
+### [tfmodisco_multitask.py](tfmodisco_multitask.py)
+
+Runs TF-MoDISCO.
+
+### [insilico_mut.py](insilico_mut.py)
+
+Conducts saturation mutagenesis.
